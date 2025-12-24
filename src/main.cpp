@@ -150,6 +150,10 @@ void setup()
 
 void loop()
 {
+  // Ignore everything until 60 seconds have passed
+  if (millis() < 60000) {
+    return; 
+  }
   unsigned long time_ms = millis();
 
   mq.readAndLogCSV(siteID);
