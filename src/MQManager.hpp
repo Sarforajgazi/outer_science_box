@@ -1,0 +1,69 @@
+// #pragma once
+// #include <Arduino.h>
+// #include "MQSensor.hpp"
+
+// class MQManager {
+// public:
+//     MQManager();
+//     void begin();
+//     void readAndPrint(Stream &out = Serial);
+
+// private:
+//   MQSensor mq4;
+//   MQSensor mq6;
+//   MQSensor mq8;
+//   MQSensor mq135;
+
+//   void readOne(const char *name, MQSensor &sensor, Stream &out);
+// };
+
+
+// #pragma once
+// #include <Arduino.h>
+// #include "MQSensor.hpp"
+
+// class MQManager {
+// public:
+//   MQManager();
+//   void begin();
+//   void readAndPrint(Stream &out = Serial);
+
+//   // Inject calibrated Ro values
+//   void setRoValues(float ro4, float ro6, float ro8, float ro135);
+
+// private:
+//   MQSensor mq4;
+//   MQSensor mq6;
+//   MQSensor mq8;
+//   MQSensor mq135;
+
+//   void readOne(const char *name, MQSensor &sensor, Stream &out);
+// };
+
+#pragma once
+#include <Arduino.h>
+#include "MQSensor.hpp"
+
+class MQManager {
+public:
+  MQManager();
+  void begin();
+
+  void setRoValues(float ro4, float ro6, float ro8, float ro135);
+  void readAndLogCSV(int siteID);
+
+private:
+  MQSensor mq4;
+  MQSensor mq6;
+  MQSensor mq8;
+  MQSensor mq135;
+
+  void readOneCSV(
+    uint32_t timeMs,
+    int site,
+    const char *sensorName,
+    MQSensor &sensor,
+    float m,
+    float b
+  );
+};
