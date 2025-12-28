@@ -108,34 +108,112 @@
 // }
 
 
-#include <Arduino.h>
+
+
+//-------------------------------------------------------------------
+// #include <Arduino.h>
+// #include <Wire.h>
+// #include <Adafruit_BMP280.h>
+// #include "MQManager.hpp"
+
+// MQManager mq;
+// Adafruit_BMP280 bmp;   // default I2C
+
+// int siteID = 1;
+
+// void setup()
+// {
+//   Serial.begin(9600);
+//   while (!Serial && millis() < 2000) {
+//     delay(10);
+//   }
+
+//   // ---------- MQ ----------
+//   mq.begin();
+//   mq.setRoValues(1.25, 2.23, 0.058, 7.86);
+
+//   // ---------- BMP280 ----------
+//   Wire.begin();   // AVR uses fixed I2C pins
+
+//   if (!bmp.begin(0x76)) {   // SDO → GND
+//     Serial.println(F("BMP280 not detected!"));
+//     while (1);
+//   }
+
+//   bmp.setSampling(
+//     Adafruit_BMP280::MODE_NORMAL,
+//     Adafruit_BMP280::SAMPLING_X2,
+//     Adafruit_BMP280::SAMPLING_X16,
+//     Adafruit_BMP280::FILTER_X16,
+//     Adafruit_BMP280::STANDBY_MS_500
+//   );
+
+//   Serial.println(F("MQ + BMP280 Sensor System Ready"));
+// }
+
+// void loop()
+// {
+//   // Ignore everything until 60 seconds have passed
+//   if (millis() < 60000) {
+//     return; 
+//   }
+//   unsigned long time_ms = millis();
+
+//   mq.readAndLogCSV(siteID);
+
+//   float temp = bmp.readTemperature();
+//   float press = bmp.readPressure() / 100.0;
+//   float alt = bmp.readAltitude(1013.25);
+
+//   Serial.print(time_ms);
+//   Serial.print(",");
+//   Serial.print(siteID);
+//   Serial.print(",BMP280_TEMP,");
+//   Serial.print(temp, 2);
+//   Serial.println(",C");
+
+//   Serial.print(time_ms);
+//   Serial.print(",");
+//   Serial.print(siteID);
+//   Serial.print(",BMP280_PRESS,");
+//   Serial.print(press, 2);
+//   Serial.println(",hPa");
+
+//   Serial.print(time_ms);
+//   Serial.print(",");
+//   Serial.print(siteID);
+//   Serial.print(",BMP280_ALT,");
+//   Serial.print(alt, 2);
+//   Serial.println(",m");
+
+//   delay(2000);
+// }
+
+//---------------------------------------------------------------------------
+
 #include <Wire.h>
 #include <Adafruit_BMP280.h>
-#include "MQManager.hpp"
 
-MQManager mq;
-Adafruit_BMP280 bmp;   // default I2C
+Adafruit_BMP280 bmp;
 
-int siteID = 1;
-
-void setup()
-{
+void setup() {
   Serial.begin(9600);
-  while (!Serial && millis() < 2000) {
-    delay(10);
+  while (!Serial);
+
+  Serial.println("BMP280 basic test");
+
+  Wire.begin();   // Mega: SDA=D20, SCL=D21
+
+  // Try BOTH possible addresses
+  if (!bmp.begin(0x76)) {
+    Serial.println("0x76 failed, trying 0x77...");
+    if (!bmp.begin(0x77)) {
+      Serial.println("❌ BMP280 not detected at 0x76 or 0x77");
+      while (1);
+    }
   }
 
-  // ---------- MQ ----------
-  mq.begin();
-  mq.setRoValues(1.25, 2.23, 0.058, 7.86);
-
-  // ---------- BMP280 ----------
-  Wire.begin();   // AVR uses fixed I2C pins
-
-  if (!bmp.begin(0x76)) {   // SDO → GND
-    Serial.println(F("BMP280 not detected!"));
-    while (1);
-  }
+  Serial.println("✅ BMP280 detected!");
 
   bmp.setSampling(
     Adafruit_BMP280::MODE_NORMAL,
@@ -144,44 +222,16 @@ void setup()
     Adafruit_BMP280::FILTER_X16,
     Adafruit_BMP280::STANDBY_MS_500
   );
-
-  Serial.println(F("MQ + BMP280 Sensor System Ready"));
 }
 
-void loop()
-{
-  // Ignore everything until 60 seconds have passed
-  if (millis() < 60000) {
-    return; 
-  }
-  unsigned long time_ms = millis();
+void loop() {
+  Serial.print("Temp = ");
+  Serial.print(bmp.readTemperature());
+  Serial.println(" °C");
 
-  mq.readAndLogCSV(siteID);
-
-  float temp = bmp.readTemperature();
-  float press = bmp.readPressure() / 100.0;
-  float alt = bmp.readAltitude(1013.25);
-
-  Serial.print(time_ms);
-  Serial.print(",");
-  Serial.print(siteID);
-  Serial.print(",BMP280_TEMP,");
-  Serial.print(temp, 2);
-  Serial.println(",C");
-
-  Serial.print(time_ms);
-  Serial.print(",");
-  Serial.print(siteID);
-  Serial.print(",BMP280_PRESS,");
-  Serial.print(press, 2);
-  Serial.println(",hPa");
-
-  Serial.print(time_ms);
-  Serial.print(",");
-  Serial.print(siteID);
-  Serial.print(",BMP280_ALT,");
-  Serial.print(alt, 2);
-  Serial.println(",m");
+  Serial.print("Pressure = ");
+  Serial.print(bmp.readPressure() / 100.0);
+  Serial.println(" hPa");
 
   delay(2000);
 }
