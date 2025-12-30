@@ -191,47 +191,180 @@
 
 //---------------------------------------------------------------------------
 
+// #include <Wire.h>
+// #include <Adafruit_BMP280.h>
+
+// Adafruit_BMP280 bmp;
+
+// void setup() {
+//   Serial.begin(9600);
+//   while (!Serial);
+
+//   Serial.println("BMP280 basic test");
+
+//   Wire.begin();   // Mega: SDA=D20, SCL=D21
+
+//   // Try BOTH possible addresses
+//   if (!bmp.begin(0x76)) {
+//     Serial.println("0x76 failed, trying 0x77...");
+//     if (!bmp.begin(0x77)) {
+//       Serial.println("❌ BMP280 not detected at 0x76 or 0x77");
+//       while (1);
+//     }
+//   }
+
+//   Serial.println("✅ BMP280 detected!");
+
+//   bmp.setSampling(
+//     Adafruit_BMP280::MODE_NORMAL,
+//     Adafruit_BMP280::SAMPLING_X2,
+//     Adafruit_BMP280::SAMPLING_X16,
+//     Adafruit_BMP280::FILTER_X16,
+//     Adafruit_BMP280::STANDBY_MS_500
+//   );
+// }
+
+// void loop() {
+//   Serial.print("Temp = ");
+//   Serial.print(bmp.readTemperature());
+//   Serial.println(" °C");
+
+//   Serial.print("Pressure = ");
+//   Serial.print(bmp.readPressure() / 100.0);
+//   Serial.println(" hPa");
+
+//   delay(2000);
+// }
+
+
+//___________________________________________________________________________________
+
+// #include <Arduino.h>
+// #include "MQManager.hpp"
+
+// MQManager mq;
+// int siteID = 1;
+
+// void setup()
+// {
+//   Serial.begin(9600);
+//   while (!Serial && millis() < 2000) {
+//     delay(10);
+//   }
+
+//   // ---------- MQ ----------
+//   mq.begin();
+
+//   // Set Ro values (update after calibration)
+//   mq.setRoValues(
+//     1.25,   // MQ4  (CH4)
+//     7.86,   // MQ136 (H2S / NH3)
+//     0.058,  // MQ8  (H2)
+//     3.60    // MQ135 (Air)
+//   );
+
+//   Serial.println(F("MQ Sensor System Ready"));
+// }
+
+// void loop()
+// {
+//   // MQ warm-up time
+//   if (millis() < 60000) return;
+
+//   mq.readAndLogCSV(siteID);
+//   delay(2000);
+// }
+
+
+//----------------------------------------------------updated with bme280 library
+#include <Arduino.h>
 #include <Wire.h>
-#include <Adafruit_BMP280.h>
+#include <Adafruit_BME280.h>
+#include "MQManager.hpp"
 
-Adafruit_BMP280 bmp;
+#define SEALEVELPRESSURE_HPA 1013.25
 
-void setup() {
+MQManager mq;
+Adafruit_BME280 bme;
+
+int siteID = 1;
+
+void setup()
+{
   Serial.begin(9600);
-  while (!Serial);
-
-  Serial.println("BMP280 basic test");
-
-  Wire.begin();   // Mega: SDA=D20, SCL=D21
-
-  // Try BOTH possible addresses
-  if (!bmp.begin(0x76)) {
-    Serial.println("0x76 failed, trying 0x77...");
-    if (!bmp.begin(0x77)) {
-      Serial.println("❌ BMP280 not detected at 0x76 or 0x77");
-      while (1);
-    }
+  while (!Serial && millis() < 2000) {
+    delay(10);
   }
 
-  Serial.println("✅ BMP280 detected!");
+  // ---------- I2C ----------
+  // Mega2560 uses:
+  // SDA -> D20
+  // SCL -> D21
+  Wire.begin();
 
-  bmp.setSampling(
-    Adafruit_BMP280::MODE_NORMAL,
-    Adafruit_BMP280::SAMPLING_X2,
-    Adafruit_BMP280::SAMPLING_X16,
-    Adafruit_BMP280::FILTER_X16,
-    Adafruit_BMP280::STANDBY_MS_500
+  // ---------- BME280 ----------
+  if (!bme.begin(0x76)) {
+    Serial.println(F("BME280 not detected!"));
+    while (1);
+  }
+
+  // ---------- MQ ----------
+  mq.begin();
+
+  // Set Ro values (calibrate later)
+  mq.setRoValues(
+    1.25,   // MQ4   (CH4)
+    7.86,   // MQ136 (H2S / NH3)
+    0.058,  // MQ8   (H2)
+    3.60    // MQ135 (Air)
   );
+
+  Serial.println(F("MQ + BME280 System Ready"));
 }
 
-void loop() {
-  Serial.print("Temp = ");
-  Serial.print(bmp.readTemperature());
-  Serial.println(" °C");
+void loop()
+{
+  // MQ warm-up
+  if (millis() < 60000) return;
 
-  Serial.print("Pressure = ");
-  Serial.print(bmp.readPressure() / 100.0);
-  Serial.println(" hPa");
+  uint32_t time_ms = millis();
+
+  // ---------- MQ ----------
+  mq.readAndLogCSV(siteID);
+
+  // ---------- BME ----------
+  float temp  = bme.readTemperature();           // °C
+  float press = bme.readPressure() / 100.0;      // hPa
+  float hum   = bme.readHumidity();               // %
+  float alt   = bme.readAltitude(SEALEVELPRESSURE_HPA);
+
+  Serial.print(time_ms);
+  Serial.print(",");
+  Serial.print(siteID);
+  Serial.print(",BME_TEMP,");
+  Serial.print(temp, 2);
+  Serial.println(",C");
+
+  Serial.print(time_ms);
+  Serial.print(",");
+  Serial.print(siteID);
+  Serial.print(",BME_PRESS,");
+  Serial.print(press, 2);
+  Serial.println(",hPa");
+
+  Serial.print(time_ms);
+  Serial.print(",");
+  Serial.print(siteID);
+  Serial.print(",BME_HUM,");
+  Serial.print(hum, 2);
+  Serial.println(",%");
+
+  Serial.print(time_ms);
+  Serial.print(",");
+  Serial.print(siteID);
+  Serial.print(",BME_ALT,");
+  Serial.print(alt, 2);
+  Serial.println(",m");
 
   delay(2000);
 }
