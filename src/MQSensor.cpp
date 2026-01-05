@@ -127,56 +127,107 @@
 // }
 
 
+
+
+//------------------Last----------------------------
+// #include "MQSensor.hpp"
+// #include <math.h>
+
+// MQSensor::MQSensor(uint8_t pin)
+//   : _pin(pin), _ro(-1.0f) {}
+
+// void MQSensor::begin()
+// {
+//   pinMode(_pin, INPUT);
+// }
+
+// int MQSensor::readRaw()
+// {
+//   return analogRead(_pin);
+// }
+
+// int MQSensor::readAvg(uint8_t samples)
+// {
+//   long sum = 0;
+//   for (uint8_t i = 0; i < samples; i++) {
+//     sum += analogRead(_pin);
+//     delay(5);
+//   }
+//   return sum / samples;
+// }
+
+// float MQSensor::computeRsKohm(int adc)
+// {
+//   if (adc <= 0) return -1.0;
+//   return ((1023.0 - adc) / adc) * RL_KOHM;
+// }
+
+// float MQSensor::rsOverRo(float rs)
+// {
+//   if (_ro <= 0 || rs <= 0) return -1.0;
+//   return rs / _ro;
+// }
+
+// void MQSensor::setRo(float ro)
+// {
+//   _ro = ro;
+// }
+
+// float MQSensor::getRo() const
+// {
+//   return _ro;
+// }
+
+// float MQSensor::calculatePPM(float rsRo, float m, float b)
+// {
+//   if (rsRo <= 0) return -1.0;
+//   return pow(10, (log10(rsRo) - b) / m);
+// }
+
+
+//------------------Last----------------------------
+
+
+//--------------------Latest---------------------------
+
+
 #include "MQSensor.hpp"
 #include <math.h>
 
-MQSensor::MQSensor(uint8_t pin)
-  : _pin(pin), _ro(-1.0f) {}
+MQSensor::MQSensor(uint8_t pin, float rlKohm)
+: _pin(pin), _rl(rlKohm), _ro(-1) {}
 
-void MQSensor::begin()
-{
-  pinMode(_pin, INPUT);
+void MQSensor::begin() {
+    pinMode(_pin, INPUT);
 }
 
-int MQSensor::readRaw()
-{
-  return analogRead(_pin);
+int MQSensor::readAvg(uint8_t samples) {
+    long sum = 0;
+    for (uint8_t i = 0; i < samples; i++) {
+        sum += analogRead(_pin);
+        delay(10);
+    }
+    return sum / samples;
 }
 
-int MQSensor::readAvg(uint8_t samples)
-{
-  long sum = 0;
-  for (uint8_t i = 0; i < samples; i++) {
-    sum += analogRead(_pin);
-    delay(5);
-  }
-  return sum / samples;
+float MQSensor::computeRs(int adc) {
+    if (adc <= 0) return 999.9;
+    if (adc >= 1023) return 0.01;
+    return ((1023.0 - adc) / adc) * _rl;
 }
 
-float MQSensor::computeRsKohm(int adc)
-{
-  if (adc <= 0) return -1.0;
-  return ((1023.0 - adc) / adc) * RL_KOHM;
+void MQSensor::calibrate(float cleanAirRatio) {
+    int adc = readAvg(100);
+    float rs = computeRs(adc);
+    _ro = rs / cleanAirRatio;
 }
 
-float MQSensor::rsOverRo(float rs)
-{
-  if (_ro <= 0 || rs <= 0) return -1.0;
-  return rs / _ro;
-}
+float MQSensor::getPPM(float m, float b) {
+    int adc = readAvg();
+    float rs = computeRs(adc);
+    if (_ro <= 0 || rs <= 0) return 0;
 
-void MQSensor::setRo(float ro)
-{
-  _ro = ro;
-}
-
-float MQSensor::getRo() const
-{
-  return _ro;
-}
-
-float MQSensor::calculatePPM(float rsRo, float m, float b)
-{
-  if (rsRo <= 0) return -1.0;
-  return pow(10, (log10(rsRo) - b) / m);
+    float ratio = rs / _ro;
+    float logppm = (log10(ratio) - b) / m;
+    return pow(10, logppm);
 }

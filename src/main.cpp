@@ -276,7 +276,101 @@
 // }
 
 
-//----------------------------------------------------updated with bme280 library
+//----------------------------updated with bme280 library--------------------
+// #include <Arduino.h>
+// #include <Wire.h>
+// #include <Adafruit_BME280.h>
+// #include "MQManager.hpp"
+
+// #define SEALEVELPRESSURE_HPA 1013.25
+
+// MQManager mq;
+// Adafruit_BME280 bme;
+
+// int siteID = 1;
+
+// void setup()
+// {
+//   Serial.begin(9600);
+//   while (!Serial && millis() < 2000) {
+//     delay(10);
+//   }
+
+//   // ---------- I2C ----------
+//   // Mega2560 uses:
+//   // SDA -> D20
+//   // SCL -> D21
+//   Wire.begin();
+
+//   // ---------- BME280 ----------
+//   if (!bme.begin(0x76)) {
+//     Serial.println(F("BME280 not detected!"));
+//     while (1);
+//   }
+
+//   // ---------- MQ ----------
+//   mq.begin();
+
+//   // Set Ro values (calibrate later)
+//   mq.setRoValues(
+//     1.25,   // MQ4   (CH4)
+//     7.86,   // MQ136 (H2S / NH3)
+//     0.058,  // MQ8   (H2)
+//     3.60    // MQ135 (Air)
+//   );
+
+//   Serial.println(F("MQ + BME280 System Ready"));
+// }
+
+// void loop()
+// {
+//   // MQ warm-up
+//   if (millis() < 60000) return;
+
+//   uint32_t time_ms = millis();
+
+//   // ---------- MQ ----------
+//   mq.readAndLogCSV(siteID);
+
+//   // ---------- BME ----------
+//   float temp  = bme.readTemperature();           // °C
+//   float press = bme.readPressure() / 100.0;      // hPa
+//   float hum   = bme.readHumidity();               // %
+//   float alt   = bme.readAltitude(SEALEVELPRESSURE_HPA);
+
+//   Serial.print(time_ms);
+//   Serial.print(",");
+//   Serial.print(siteID);
+//   Serial.print(",BME_TEMP,");
+//   Serial.print(temp, 2);
+//   Serial.println(",C");
+
+//   Serial.print(time_ms);
+//   Serial.print(",");
+//   Serial.print(siteID);
+//   Serial.print(",BME_PRESS,");
+//   Serial.print(press, 2);
+//   Serial.println(",hPa");
+
+//   Serial.print(time_ms);
+//   Serial.print(",");
+//   Serial.print(siteID);
+//   Serial.print(",BME_HUM,");
+//   Serial.print(hum, 2);
+//   Serial.println(",%");
+
+//   Serial.print(time_ms);
+//   Serial.print(",");
+//   Serial.print(siteID);
+//   Serial.print(",BME_ALT,");
+//   Serial.print(alt, 2);
+//   Serial.println(",m");
+
+//   delay(2000);
+// }
+
+
+// Latest vesrion 
 #include <Arduino.h>
 #include <Wire.h>
 #include <Adafruit_BME280.h>
@@ -284,87 +378,48 @@
 
 #define SEALEVELPRESSURE_HPA 1013.25
 
-MQManager mq;
 Adafruit_BME280 bme;
+MQManager mq;
 
 int siteID = 1;
 
-void setup()
-{
-  Serial.begin(9600);
-  while (!Serial && millis() < 2000) {
-    delay(10);
-  }
+void setup() {
+    Serial.begin(9600);
+    Wire.begin();
 
-  // ---------- I2C ----------
-  // Mega2560 uses:
-  // SDA -> D20
-  // SCL -> D21
-  Wire.begin();
+    if (!bme.begin(0x76)) {
+        Serial.println(F("❌ BME280 not detected"));
+        while (1);
+    }
 
-  // ---------- BME280 ----------
-  if (!bme.begin(0x76)) {
-    Serial.println(F("BME280 not detected!"));
-    while (1);
-  }
+    mq.begin();
 
-  // ---------- MQ ----------
-  mq.begin();
+    // ---------- MQ Warm-up ----------
+    Serial.println(F("Warming MQ sensors (60s)..."));
+    for (int i = 60; i > 0; i--) {
+        Serial.print(F("Remaining: "));
+        Serial.println(i);
+        delay(1000);
+    }
 
-  // Set Ro values (calibrate later)
-  mq.setRoValues(
-    1.25,   // MQ4   (CH4)
-    7.86,   // MQ136 (H2S / NH3)
-    0.058,  // MQ8   (H2)
-    3.60    // MQ135 (Air)
-  );
-
-  Serial.println(F("MQ + BME280 System Ready"));
+    // ---------- Auto Calibration ----------
+    mq.calibrateAll();
 }
 
-void loop()
-{
-  // MQ warm-up
-  if (millis() < 60000) return;
+void loop() {
+    uint32_t timeMs = millis();
 
-  uint32_t time_ms = millis();
+    // ----- BME280 -----
+    float temp  = bme.readTemperature();             // °C
+    float hum   = bme.readHumidity();                // %
+    float press = bme.readPressure() / 100.0;        // hPa
+    float alt   = bme.readAltitude(SEALEVELPRESSURE_HPA);
 
-  // ---------- MQ ----------
-  mq.readAndLogCSV(siteID);
+    // ----- MQ Sensors -----
+    mq.readAndLogCSV(siteID, temp, hum, press, alt);
 
-  // ---------- BME ----------
-  float temp  = bme.readTemperature();           // °C
-  float press = bme.readPressure() / 100.0;      // hPa
-  float hum   = bme.readHumidity();               // %
-  float alt   = bme.readAltitude(SEALEVELPRESSURE_HPA);
+    // ----- Log BME as CSV too -----
+    mq.logEnvCSV(timeMs, siteID, temp, hum, press, alt);
 
-  Serial.print(time_ms);
-  Serial.print(",");
-  Serial.print(siteID);
-  Serial.print(",BME_TEMP,");
-  Serial.print(temp, 2);
-  Serial.println(",C");
-
-  Serial.print(time_ms);
-  Serial.print(",");
-  Serial.print(siteID);
-  Serial.print(",BME_PRESS,");
-  Serial.print(press, 2);
-  Serial.println(",hPa");
-
-  Serial.print(time_ms);
-  Serial.print(",");
-  Serial.print(siteID);
-  Serial.print(",BME_HUM,");
-  Serial.print(hum, 2);
-  Serial.println(",%");
-
-  Serial.print(time_ms);
-  Serial.print(",");
-  Serial.print(siteID);
-  Serial.print(",BME_ALT,");
-  Serial.print(alt, 2);
-  Serial.println(",m");
-
-  delay(2000);
+    delay(2000);
 }

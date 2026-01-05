@@ -39,3 +39,4 @@ private:
     float _rl_ohms;
     float _ro_kohm;
 };
+

@@ -24,27 +24,51 @@
 // };
 
 
+//---------------Last------------------------
+// #pragma once
+// #include <Arduino.h>
+
+// class MQSensor {
+// public:
+//   explicit MQSensor(uint8_t pin);
+
+//   void begin();
+
+//   int   readRaw();
+//   int   readAvg(uint8_t samples = 10);
+//   float computeRsKohm(int adc);
+//   float rsOverRo(float rs);
+
+//   void  setRo(float ro);
+//   float getRo() const;
+
+//   float calculatePPM(float rsRo, float m, float b);
+
+// private:
+//   uint8_t _pin;
+//   float   _ro;                         // Reference resistance (kΩ)
+//   static constexpr float RL_KOHM = 1.0;
+// };
+
+
+//--------------------Latest---------------------------
 #pragma once
 #include <Arduino.h>
 
 class MQSensor {
 public:
-  explicit MQSensor(uint8_t pin);
+    explicit MQSensor(uint8_t pin, float rlKohm = 10.0);
 
-  void begin();
+    void begin();
+    void calibrate(float cleanAirRatio);
 
-  int   readRaw();
-  int   readAvg(uint8_t samples = 10);
-  float computeRsKohm(int adc);
-  float rsOverRo(float rs);
-
-  void  setRo(float ro);
-  float getRo() const;
-
-  float calculatePPM(float rsRo, float m, float b);
+    float getPPM(float m, float b);
 
 private:
-  uint8_t _pin;
-  float   _ro;                         // Reference resistance (kΩ)
-  static constexpr float RL_KOHM = 10.0;
+    uint8_t _pin;
+    float _rl;
+    float _ro;
+
+    int readAvg(uint8_t samples = 20);
+    float computeRs(int adc);
 };
