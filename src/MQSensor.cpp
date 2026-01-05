@@ -219,8 +219,8 @@ float MQSensor::adcToVoltage(int adc) const {
 }
 
 float MQSensor::computeRsKohm(int adc) const {
-    if (adc <= 0) return 999.9;
-    if (adc >= ADC_MAX) return 0.01;
+    if (adc <= 0) return 999.9f;
+    if (adc >= ADC_MAX) return 0.01f;
     return ((ADC_MAX - adc) / (float)adc) * (_rl_ohms / 1000.0f);
 }
 
