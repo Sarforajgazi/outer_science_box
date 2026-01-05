@@ -142,7 +142,7 @@ private:
     void logOne(
         uint32_t timeMs,
         int siteID,
-        const char* name,
+        const char* sensor,
         float value,
         const char* unit,
         float temp,
@@ -151,4 +151,3 @@ private:
         float alt
     );
 };
-

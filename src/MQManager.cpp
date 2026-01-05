@@ -207,13 +207,13 @@
 
 #include "MQManager.hpp"
 
-// Mega Analog Pins
+// Mega analog pins
 #define MQ4_PIN    A4
 #define MQ136_PIN  A6
 #define MQ8_PIN    A0
 #define MQ135_PIN  A2
 
-// Datasheet constants
+// Datasheet curve constants
 #define MQ4_M    -0.38
 #define MQ4_B     1.34
 #define MQ136_M  -0.48
@@ -236,12 +236,14 @@ void MQManager::begin() {
 }
 
 void MQManager::calibrateAll() {
-    Serial.println(F("Calibrating MQ sensors (clean air)..."));
-    mq4.calibrate(4.4);
-    mq136.calibrate(3.6);
-    mq8.calibrate(1.0);
-    mq135.calibrate(3.6);
-    Serial.println(F("Calibration done."));
+    Serial.println(F("Calibrating MQ sensors in clean air..."));
+
+    mq4.calibrateFromCleanAirRatio(4.4);   // MQ4
+    mq136.calibrateFromCleanAirRatio(3.6); // MQ136
+    mq8.calibrateFromCleanAirRatio(1.0);   // MQ8
+    mq135.calibrateFromCleanAirRatio(3.6); // MQ135
+
+    Serial.println(F("Calibration done"));
 }
 
 void MQManager::readAndLogCSV(
@@ -253,10 +255,10 @@ void MQManager::readAndLogCSV(
 ) {
     uint32_t t = millis();
 
-    logOne(t, siteID, "MQ4_CH4",  mq4.getPPM(MQ4_M, MQ4_B),   "ppm", temp, hum, press, alt);
-    logOne(t, siteID, "MQ136_H2S",mq136.getPPM(MQ136_M, MQ136_B),"ppm", temp, hum, press, alt);
-    logOne(t, siteID, "MQ8_H2",   mq8.getPPM(MQ8_M, MQ8_B),   "ppm", temp, hum, press, alt);
-    logOne(t, siteID, "MQ135_AIR",mq135.getPPM(MQ135_M, MQ135_B),"ppm", temp, hum, press, alt);
+    logOne(t, siteID, "MQ4_CH4",   mq4.readPPM(MQ4_M, MQ4_B),     "ppm", temp, hum, press, alt);
+    logOne(t, siteID, "MQ136_H2S", mq136.readPPM(MQ136_M, MQ136_B),"ppm", temp, hum, press, alt);
+    logOne(t, siteID, "MQ8_H2",    mq8.readPPM(MQ8_M, MQ8_B),     "ppm", temp, hum, press, alt);
+    logOne(t, siteID, "MQ135_AIR", mq135.readPPM(MQ135_M, MQ135_B),"ppm", temp, hum, press, alt);
 }
 
 void MQManager::logEnvCSV(
@@ -267,16 +269,16 @@ void MQManager::logEnvCSV(
     float press,
     float alt
 ) {
-    logOne(timeMs, siteID, "BME_TEMP", temp,  "C",   temp, hum, press, alt);
-    logOne(timeMs, siteID, "BME_HUM",  hum,   "%",   temp, hum, press, alt);
-    logOne(timeMs, siteID, "BME_PRESS",press, "hPa", temp, hum, press, alt);
-    logOne(timeMs, siteID, "BME_ALT",  alt,   "m",   temp, hum, press, alt);
+    logOne(timeMs, siteID, "BME_TEMP",  temp,  "C",   temp, hum, press, alt);
+    logOne(timeMs, siteID, "BME_HUM",   hum,   "%",   temp, hum, press, alt);
+    logOne(timeMs, siteID, "BME_PRESS", press, "hPa", temp, hum, press, alt);
+    logOne(timeMs, siteID, "BME_ALT",   alt,   "m",   temp, hum, press, alt);
 }
 
 void MQManager::logOne(
     uint32_t timeMs,
     int siteID,
-    const char* name,
+    const char* sensor,
     float value,
     const char* unit,
     float temp,
@@ -286,12 +288,11 @@ void MQManager::logOne(
 ) {
     Serial.print(timeMs); Serial.print(",");
     Serial.print(siteID); Serial.print(",");
-    Serial.print(name);   Serial.print(",");
+    Serial.print(sensor); Serial.print(",");
     Serial.print(value, 3); Serial.print(",");
-    Serial.print(unit);   Serial.print(",");
+    Serial.print(unit); Serial.print(",");
     Serial.print(temp, 2); Serial.print(",");
-    Serial.print(hum, 2);  Serial.print(",");
-    Serial.print(press, 2);Serial.print(",");
+    Serial.print(hum, 2); Serial.print(",");
+    Serial.print(press, 2); Serial.print(",");
     Serial.println(alt, 2);
 }
-

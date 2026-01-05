@@ -194,40 +194,76 @@
 #include "MQSensor.hpp"
 #include <math.h>
 
-MQSensor::MQSensor(uint8_t pin, float rlKohm)
-: _pin(pin), _rl(rlKohm), _ro(-1) {}
+MQSensor::MQSensor(uint8_t pin, float rl_ohms, float ro_kohm)
+: _pin(pin), _rl_ohms(rl_ohms), _ro_kohm(ro_kohm) {}
 
 void MQSensor::begin() {
     pinMode(_pin, INPUT);
 }
 
-int MQSensor::readAvg(uint8_t samples) {
+int MQSensor::readRaw() const {
+    return analogRead(_pin);
+}
+
+int MQSensor::readAvg(int samples, unsigned long delay_ms) const {
     long sum = 0;
-    for (uint8_t i = 0; i < samples; i++) {
+    for (int i = 0; i < samples; i++) {
         sum += analogRead(_pin);
-        delay(10);
+        delay(delay_ms);
     }
     return sum / samples;
 }
 
-float MQSensor::computeRs(int adc) {
+float MQSensor::adcToVoltage(int adc) const {
+    return (adc * ADC_REF) / ADC_MAX;
+}
+
+float MQSensor::computeRsKohm(int adc) const {
     if (adc <= 0) return 999.9;
-    if (adc >= 1023) return 0.01;
-    return ((1023.0 - adc) / adc) * _rl;
+    if (adc >= ADC_MAX) return 0.01;
+    return ((ADC_MAX - adc) / (float)adc) * (_rl_ohms / 1000.0f);
 }
 
-void MQSensor::calibrate(float cleanAirRatio) {
-    int adc = readAvg(100);
-    float rs = computeRs(adc);
-    _ro = rs / cleanAirRatio;
+float MQSensor::measureRsKohmInCleanAir(
+    int samples,
+    unsigned long delayMsBetween
+) const {
+    float sum = 0;
+    for (int i = 0; i < samples; i++) {
+        sum += computeRsKohm(readRaw());
+        delay(delayMsBetween);
+    }
+    return sum / samples;
 }
 
-float MQSensor::getPPM(float m, float b) {
-    int adc = readAvg();
-    float rs = computeRs(adc);
-    if (_ro <= 0 || rs <= 0) return 0;
+float MQSensor::rsOverRo(float rs_kohm) const {
+    if (_ro_kohm <= 0 || rs_kohm <= 0) return -1.0f;
+    return rs_kohm / _ro_kohm;
+}
 
-    float ratio = rs / _ro;
-    float logppm = (log10(ratio) - b) / m;
-    return pow(10, logppm);
+void MQSensor::calibrateFromCleanAirRatio(
+    float cleanAirRsRoRatio,
+    int samples,
+    unsigned long delayMs
+) {
+    float rs = measureRsKohmInCleanAir(samples, delayMs);
+    if (rs > 0 && cleanAirRsRoRatio > 0) {
+        _ro_kohm = rs / cleanAirRsRoRatio;
+    }
+}
+
+float MQSensor::calculatePPM(float rs_ro, float m, float b) const {
+    if (rs_ro <= 0 || m == 0) return 0.0f;
+    float log_ppm = (log10(rs_ro) - b) / m;
+    return pow(10.0f, log_ppm);
+}
+
+float MQSensor::readPPM(float m, float b) {
+    if (_ro_kohm <= 0) return 0.0f;
+
+    int avgAdc = readAvg();
+    float rs = computeRsKohm(avgAdc);
+    float ratio = rsOverRo(rs);
+
+    return calculatePPM(ratio, m, b);
 }

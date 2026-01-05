@@ -388,7 +388,7 @@ void setup() {
     Wire.begin();
 
     if (!bme.begin(0x76)) {
-        Serial.println(F("❌ BME280 not detected"));
+        Serial.println(F("BME280 not detected"));
         while (1);
     }
 
@@ -397,8 +397,6 @@ void setup() {
     // ---------- MQ Warm-up ----------
     Serial.println(F("Warming MQ sensors (60s)..."));
     for (int i = 60; i > 0; i--) {
-        Serial.print(F("Remaining: "));
-        Serial.println(i);
         delay(1000);
     }
 
@@ -418,7 +416,7 @@ void loop() {
     // ----- MQ Sensors -----
     mq.readAndLogCSV(siteID, temp, hum, press, alt);
 
-    // ----- Log BME as CSV too -----
+    // ----- Environment as CSV -----
     mq.logEnvCSV(timeMs, siteID, temp, hum, press, alt);
 
     delay(2000);
