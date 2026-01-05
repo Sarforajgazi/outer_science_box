@@ -83,38 +83,84 @@
 # plt.tight_layout(rect=[0, 0, 1, 0.96])
 # plt.show()
 
-import csv
+# import csv
+# import matplotlib.pyplot as plt
+# from collections import defaultdict
+
+# CSV_FILE = "data.csv"   # your data file
+# TIME_SCALE = 1000.0       # ms → seconds
+
+# time_data = defaultdict(list)
+# ppm_data = defaultdict(list)
+
+# # Read CSV
+# with open(CSV_FILE, "r") as f:
+#     reader = csv.reader(f)
+#     for row in reader:
+#         if len(row) < 6:
+#             continue
+
+#         time_sec = float(row[0]) / TIME_SCALE
+#         sensor   = row[2]
+#         ppm      = float(row[5])
+
+#         time_data[sensor].append(time_sec)
+#         ppm_data[sensor].append(ppm)
+
+# # ====== PLOT EACH SENSOR SEPARATELY ======
+
+# for sensor in time_data:
+#     plt.figure(figsize=(10, 4))
+#     plt.plot(time_data[sensor], ppm_data[sensor])
+#     plt.xlabel("Time (seconds)")
+#     plt.ylabel("PPM")
+#     plt.title(f"{sensor} : PPM vs Time")
+#     plt.grid(True)
+#     plt.tight_layout()
+#     plt.show()
+
+
+
+
+import pandas as pd
 import matplotlib.pyplot as plt
-from collections import defaultdict
 
-CSV_FILE = "data.csv"   # your data file
-TIME_SCALE = 1000.0       # ms → seconds
+# ---------------- LOAD DATA ----------------
+df = pd.read_csv(
+    "data.csv",
+    header=None,
+    names=["time_ms", "site", "sensor", "rs_kohm", "rs_ro", "ppm"]
+)
 
-time_data = defaultdict(list)
-ppm_data = defaultdict(list)
+# Convert time to seconds
+df["time_s"] = df["time_ms"] / 1000.0
 
-# Read CSV
-with open(CSV_FILE, "r") as f:
-    reader = csv.reader(f)
-    for row in reader:
-        if len(row) < 6:
-            continue
+# ---------------- SENSOR CONFIG (MATCHES YOUR DATA) ----------------
+sensors = [
+    ("MQ4_CH4",     "MQ-4 Methane (CH₄)"),
+    ("MQ136_H2S",   "MQ-136 Hydrogen Sulfide (H₂S)"),
+    ("MQ8_H2",      "MQ-8 Hydrogen (H₂)"),
+    ("MQ135_AIR",   "MQ-135 Air Quality")
+]
 
-        time_sec = float(row[0]) / TIME_SCALE
-        sensor   = row[2]
-        ppm      = float(row[5])
+# ---------------- PLOT: 4 SENSORS, ONE SCREEN ----------------
+fig, axes = plt.subplots(2, 2, figsize=(15, 9))
+axes = axes.flatten()
 
-        time_data[sensor].append(time_sec)
-        ppm_data[sensor].append(ppm)
+for ax, (sensor_id, title) in zip(axes, sensors):
+    data = df[df["sensor"] == sensor_id]
 
-# ====== PLOT EACH SENSOR SEPARATELY ======
+    if data.empty:
+        ax.set_title(f"{title}\n(No Data)")
+        ax.axis("off")
+        continue
 
-for sensor in time_data:
-    plt.figure(figsize=(10, 4))
-    plt.plot(time_data[sensor], ppm_data[sensor])
-    plt.xlabel("Time (seconds)")
-    plt.ylabel("PPM")
-    plt.title(f"{sensor} : PPM vs Time")
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+    ax.plot(data["time_s"], data["ppm"], linewidth=1.5)
+    ax.set_title(title)
+    ax.set_xlabel("Time (seconds)")
+    ax.set_ylabel("PPM")
+    ax.grid(alpha=0.3)
+
+plt.suptitle("MQ Sensors – Time vs Gas Concentration (PPM)", fontsize=16)
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+plt.show()
