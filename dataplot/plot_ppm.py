@@ -120,47 +120,105 @@
 #     plt.show()
 
 
+##---------------------last-----------------------
+
+# import pandas as pd
+# import matplotlib.pyplot as plt
+
+# # ---------------- LOAD DATA ----------------
+# df = pd.read_csv(
+#     "data.csv",
+#     header=None,
+#     names=["time_ms", "site", "sensor", "rs_kohm", "rs_ro", "ppm"]
+# )
+
+# # Convert time to seconds
+# df["time_s"] = df["time_ms"] / 1000.0
+
+# # ---------------- SENSOR CONFIG (MATCHES YOUR DATA) ----------------
+# sensors = [
+#     ("MQ4_CH4",     "MQ-4 Methane (CH₄)"),
+#     ("MQ136_H2S",   "MQ-136 Hydrogen Sulfide (H₂S)"),
+#     ("MQ8_H2",      "MQ-8 Hydrogen (H₂)"),
+#     ("MQ135_AIR",   "MQ-135 Air Quality")
+# ]
+
+# # ---------------- PLOT: 4 SENSORS, ONE SCREEN ----------------
+# fig, axes = plt.subplots(2, 2, figsize=(15, 9))
+# axes = axes.flatten()
+
+# for ax, (sensor_id, title) in zip(axes, sensors):
+#     data = df[df["sensor"] == sensor_id]
+
+#     if data.empty:
+#         ax.set_title(f"{title}\n(No Data)")
+#         ax.axis("off")
+#         continue
+
+#     ax.plot(data["time_s"], data["ppm"], linewidth=1.5)
+#     ax.set_title(title)
+#     ax.set_xlabel("Time (seconds)")
+#     ax.set_ylabel("PPM")
+#     ax.grid(alpha=0.3)
+
+# plt.suptitle("MQ Sensors – Time vs Gas Concentration (PPM)", fontsize=16)
+# plt.tight_layout(rect=[0, 0, 1, 0.95])
+# plt.show()
 
 
 import pandas as pd
 import matplotlib.pyplot as plt
 
-# ---------------- LOAD DATA ----------------
-df = pd.read_csv(
-    "data.csv",
-    header=None,
-    names=["time_ms", "site", "sensor", "rs_kohm", "rs_ro", "ppm"]
-)
+# =======================
+# LOAD CSV DATA
+# =======================
+csv_file = "data.csv"
+df = pd.read_csv(csv_file)
 
-# Convert time to seconds
+# Convert time from ms to seconds
 df["time_s"] = df["time_ms"] / 1000.0
 
-# ---------------- SENSOR CONFIG (MATCHES YOUR DATA) ----------------
-sensors = [
-    ("MQ4_CH4",     "MQ-4 Methane (CH₄)"),
-    ("MQ136_H2S",   "MQ-136 Hydrogen Sulfide (H₂S)"),
-    ("MQ8_H2",      "MQ-8 Hydrogen (H₂)"),
-    ("MQ135_AIR",   "MQ-135 Air Quality")
-]
-
-# ---------------- PLOT: 4 SENSORS, ONE SCREEN ----------------
-fig, axes = plt.subplots(2, 2, figsize=(15, 9))
-axes = axes.flatten()
-
-for ax, (sensor_id, title) in zip(axes, sensors):
-    data = df[df["sensor"] == sensor_id]
+# =======================
+# FILTER FUNCTIONS
+# =======================
+def plot_sensor(sensor_name, site_id=1):
+    data = df[(df["sensor"] == sensor_name) & (df["site"] == site_id)]
 
     if data.empty:
-        ax.set_title(f"{title}\n(No Data)")
-        ax.axis("off")
-        continue
+        print(f"No data for {sensor_name} at site {site_id}")
+        return
 
-    ax.plot(data["time_s"], data["ppm"], linewidth=1.5)
-    ax.set_title(title)
-    ax.set_xlabel("Time (seconds)")
-    ax.set_ylabel("PPM")
-    ax.grid(alpha=0.3)
+    plt.figure()
+    plt.plot(data["time_s"], data["value"])
+    plt.xlabel("Time (s)")
+    plt.ylabel(f"{sensor_name} ({data['unit'].iloc[0]})")
+    plt.title(f"{sensor_name} vs Time (Site {site_id})")
+    plt.grid(True)
+    plt.show()
 
-plt.suptitle("MQ Sensors – Time vs Gas Concentration (PPM)", fontsize=16)
-plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.show()
+def plot_environment(param, site_id=1):
+    data = df[df["site"] == site_id]
+
+    plt.figure()
+    plt.plot(data["time_s"], data[param])
+    plt.xlabel("Time (s)")
+    plt.ylabel(param)
+    plt.title(f"{param} vs Time (Site {site_id})")
+    plt.grid(True)
+    plt.show()
+
+# =======================
+# MQ GAS PLOTS
+# =======================
+plot_sensor("MQ4_CH4", site_id=1)
+plot_sensor("MQ136_H2S", site_id=1)
+plot_sensor("MQ8_H2", site_id=1)
+plot_sensor("MQ135_AIR", site_id=1)
+
+# =======================
+# ENVIRONMENT PLOTS
+# =======================
+plot_environment("temp_C", site_id=1)
+plot_environment("hum_%", site_id=1)
+plot_environment("press_hPa", site_id=1)
+plot_environment("alt_m", site_id=1)
