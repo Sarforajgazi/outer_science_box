@@ -213,7 +213,7 @@ def plot_environment(param, site_id=1):
 plot_sensor("MQ4_CH4", site_id=1)
 plot_sensor("MQ136_H2S", site_id=1)
 plot_sensor("MQ8_H2", site_id=1)
-plot_sensor("MQ135_AIR", site_id=1)
+plot_sensor("MQ135_CO2", site_id=1)
 
 # =======================
 # ENVIRONMENT PLOTS
@@ -221,4 +221,5 @@ plot_sensor("MQ135_AIR", site_id=1)
 plot_environment("temp_C", site_id=1)
 plot_environment("hum_%", site_id=1)
 plot_environment("press_hPa", site_id=1)
-plot_environment("alt_m", site_id=1)
+# Altitude removed - no longer logged
+

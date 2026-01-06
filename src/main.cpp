@@ -377,7 +377,6 @@
 #include <Adafruit_BME280.h>
 #include "MQManager.hpp"
 
-#define SEALEVELPRESSURE_HPA 1013.25
 
 Adafruit_BME280 bme;
 MQManager mq;
@@ -412,13 +411,12 @@ void loop() {
     float temp  = bme.readTemperature();             // °C
     float hum   = bme.readHumidity();                // %
     float press = bme.readPressure() / 100.0;        // hPa
-    float alt   = bme.readAltitude(SEALEVELPRESSURE_HPA);
 
     // ----- MQ Sensors -----
-    mq.readAndLogCSV(siteID, temp, hum, press, alt);
+    mq.readAndLogCSV(siteID, temp, hum, press);
 
     // ----- Environment as CSV -----
-    mq.logEnvCSV(timeMs, siteID, temp, hum, press, alt);
+    mq.logEnvCSV(timeMs, siteID, temp, hum, press);
 
     delay(2000);
 }

@@ -262,6 +262,13 @@ float MQSensor::readPPM(float m, float b) {
     if (_ro_kohm <= 0) return 0.0f;
 
     int avgAdc = readAvg();
+    
+    // Safety check: detect unpowered/disconnected sensor
+    // Floating inputs typically read very low (<10) or very high (>1000)
+    if (avgAdc < 10 || avgAdc > 1000) {
+        return -1.0f;  // Return -1 to indicate invalid/unpowered sensor
+    }
+    
     float rs = computeRsKohm(avgAdc);
     float ratio = rsOverRo(rs);
 

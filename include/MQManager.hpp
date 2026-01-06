@@ -120,8 +120,7 @@ public:
         int siteID,
         float temp,
         float hum,
-        float press,
-        float alt
+        float press
     );
 
     void logEnvCSV(
@@ -129,8 +128,7 @@ public:
         int siteID,
         float temp,
         float hum,
-        float press,
-        float alt
+        float press
     );
 
 private:
@@ -147,7 +145,6 @@ private:
         const char* unit,
         float temp,
         float hum,
-        float press,
-        float alt
+        float press
     );
 };
