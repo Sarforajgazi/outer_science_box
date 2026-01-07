@@ -77,6 +77,7 @@ public:
 
     float calculatePPM(float rs_ro, float m, float b) const;
     float readPPM(float m, float b);
+    float readPPMSmoothed(float m, float b);  // EMA-filtered version
 
     uint8_t pin() const { return _pin; }
     float roKohm() const { return _ro_kohm; }
@@ -89,4 +90,7 @@ private:
     uint8_t _pin;
     float _rl_ohms;
     float _ro_kohm;
+    float _ema_ppm = -1.0f;  // Exponential moving average state
+    static constexpr float EMA_ALPHA = 0.1f;  // Lower alpha = more smoothing
+    static constexpr float SPIKE_THRESHOLD = 10.0f;  // Reject readings > 10x average
 };

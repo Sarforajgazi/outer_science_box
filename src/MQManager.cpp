@@ -217,7 +217,7 @@
 // These are calibrated so clean air ratio gives ~0 ppm
 // MQ-4: CH4 detection, clean air Rs/Ro = 4.4
 #define MQ4_M    -0.36
-#define MQ4_B     1.30   // Adjusted: at Rs/Ro=4.4, ppm ≈ 1-2
+#define MQ4_B     1.10   // Increased to get ~2 ppm in clean air
 
 // MQ-136: H2S detection, clean air Rs/Ro = 3.6
 #define MQ136_M  -0.44
@@ -243,10 +243,10 @@
 // #define MQ135_HUM_REF   70.0   // Avg humidity in Udupi
 
 MQManager::MQManager()
-: mq4(MQ4_PIN, 20000.0f),      // MQ-4:   RL = 20 kΩ (datasheet)
-  mq136(MQ136_PIN, 20000.0f),  // MQ-136: RL = 20 kΩ (datasheet)
-  mq8(MQ8_PIN, 10000.0f),      // MQ-8:   RL = 10 kΩ (datasheet)
-  mq135(MQ135_PIN, 20000.0f)   // MQ-135: RL = 20 kΩ (datasheet)
+: mq4(MQ4_PIN, 25000.0f),      // MQ-4:   RL = 25 kΩ
+  mq136(MQ136_PIN, 20000.0f),  // MQ-136: RL = 20 kΩ
+  mq8(MQ8_PIN, 15000.0f),      // MQ-8:   RL = 15 kΩ
+  mq135(MQ135_PIN, 15000.0f)   // MQ-135: RL = 15 kΩ
 {}
 
 void MQManager::begin() {
@@ -271,9 +271,18 @@ void MQManager::calibrateAll() {
     Serial.print(F("MQ8 Ro: ")); Serial.print(mq8.roKohm()); Serial.println(F(" kOhm"));
 
     mq135.calibrateFromCleanAirRatio(3.6); // MQ-135 (Air quality)
+    Serial.print(F("MQ135 raw ADC: ")); Serial.println(analogRead(MQ135_PIN));
     Serial.print(F("MQ135 Ro: ")); Serial.print(mq135.roKohm()); Serial.println(F(" kOhm"));
 
     Serial.println(F("Calibration complete!"));
+}
+
+void MQManager::setRoValues(float ro4, float ro136, float ro8, float ro135) {
+    mq4.setRoKohm(ro4);
+    mq136.setRoKohm(ro136);
+    mq8.setRoKohm(ro8);
+    mq135.setRoKohm(ro135);
+    Serial.println(F("Ro values set from calibration data."));
 }
 
 void MQManager::readAndLogCSV(
@@ -284,12 +293,12 @@ void MQManager::readAndLogCSV(
 ) {
     uint32_t t = millis();
 
-    logOne(t, siteID, "MQ4_CH4",   mq4.readPPM(MQ4_M, MQ4_B),     "ppm", temp, hum, press);
-    logOne(t, siteID, "MQ136_H2S", mq136.readPPM(MQ136_M, MQ136_B),"ppm", temp, hum, press);
-    logOne(t, siteID, "MQ8_H2",    mq8.readPPM(MQ8_M, MQ8_B),     "ppm", temp, hum, press);
+    logOne(t, siteID, "MQ4_CH4",   mq4.readPPMSmoothed(MQ4_M, MQ4_B),     "ppm", temp, hum, press);
+    logOne(t, siteID, "MQ136_H2S", mq136.readPPMSmoothed(MQ136_M, MQ136_B),"ppm", temp, hum, press);
+    logOne(t, siteID, "MQ8_H2",    mq8.readPPMSmoothed(MQ8_M, MQ8_B),     "ppm", temp, hum, press);
     
     // MQ-135 CO2 with temperature/humidity compensation
-    float rawCO2 = mq135.readPPM(MQ135_M, MQ135_B);
+    float rawCO2 = mq135.readPPMSmoothed(MQ135_M, MQ135_B);
     
     // Correction factor based on environmental conditions
     // Higher temp = lower resistance = artificially high reading (correct down)

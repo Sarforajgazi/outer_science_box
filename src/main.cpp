@@ -395,8 +395,8 @@ void setup() {
     mq.begin();
 
     // ---------- MQ Warm-up ----------
-    Serial.println(F("Warming MQ sensors (60s)..."));
-    for (int i = 60; i > 0; i--) {
+    Serial.println(F("Warming MQ sensors (120s)..."));
+    for (int i = 120; i > 0; i--) {
         if (i % 10 == 0) {  // Print every 10 seconds
             Serial.print(F("  ")); 
             Serial.print(i); 

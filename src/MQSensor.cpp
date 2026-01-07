@@ -274,3 +274,28 @@ float MQSensor::readPPM(float m, float b) {
 
     return calculatePPM(ratio, m, b);
 }
+
+float MQSensor::readPPMSmoothed(float m, float b) {
+    float rawPPM = readPPM(m, b);
+    
+    // Skip invalid readings
+    if (rawPPM < 0) {
+        return _ema_ppm > 0 ? _ema_ppm : 0.0f;  // Return last good value
+    }
+    
+    // Initialize EMA on first valid reading
+    if (_ema_ppm < 0) {
+        _ema_ppm = rawPPM;
+    } else {
+        // Spike rejection: ignore readings that are way higher than current average
+        if (rawPPM > _ema_ppm * SPIKE_THRESHOLD && _ema_ppm > 0.1f) {
+            // Spike detected - return current average, don't update
+            return _ema_ppm;
+        }
+        
+        // Exponential moving average: new = alpha * raw + (1-alpha) * old
+        _ema_ppm = EMA_ALPHA * rawPPM + (1.0f - EMA_ALPHA) * _ema_ppm;
+    }
+    
+    return _ema_ppm;
+}
