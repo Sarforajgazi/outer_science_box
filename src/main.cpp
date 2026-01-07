@@ -386,19 +386,25 @@ int siteID = 1;
 void setup() {
     Serial.begin(9600);
     Wire.begin();
-
+    Serial.println(F("Initializing sensors..."));
     if (!bme.begin(0x76)) {
         Serial.println(F("BME280 not detected"));
         while (1);
     }
-
+    Serial.println(F("BME280 detected"));
     mq.begin();
 
     // ---------- MQ Warm-up ----------
     Serial.println(F("Warming MQ sensors (60s)..."));
     for (int i = 60; i > 0; i--) {
+        if (i % 10 == 0) {  // Print every 10 seconds
+            Serial.print(F("  ")); 
+            Serial.print(i); 
+            Serial.println(F("s remaining..."));
+        }
         delay(1000);
     }
+    Serial.println(F("Warmup complete!"));
 
     // ---------- Auto Calibration ----------
     mq.calibrateAll();
@@ -420,3 +426,5 @@ void loop() {
 
     delay(2000);
 }
+
+
