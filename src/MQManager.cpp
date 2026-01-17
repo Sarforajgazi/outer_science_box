@@ -277,14 +277,6 @@ void MQManager::calibrateAll() {
     Serial.println(F("Calibration complete!"));
 }
 
-void MQManager::setRoValues(float ro4, float ro136, float ro8, float ro135) {
-    mq4.setRoKohm(ro4);
-    mq136.setRoKohm(ro136);
-    mq8.setRoKohm(ro8);
-    mq135.setRoKohm(ro135);
-    Serial.println(F("Ro values set from calibration data."));
-}
-
 void MQManager::readAndLogCSV(
     int siteID,
     float temp,
