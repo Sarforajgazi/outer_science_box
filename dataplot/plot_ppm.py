@@ -168,11 +168,14 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import os
 
 # =======================
 # LOAD CSV DATA
 # =======================
-csv_file = "data.csv"
+# Use the script's directory to find data.csv (works from any working directory)
+script_dir = os.path.dirname(os.path.abspath(__file__))
+csv_file = os.path.join(script_dir, "data.csv")
 df = pd.read_csv(csv_file)
 
 # Convert time from ms to seconds
