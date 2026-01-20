@@ -1,4 +1,4 @@
-#!/Users/sarforajgazi/Downloads/outer_science_box/dataplot/venv/bin/python3.12
+#!/Users/sarforajgazi/outer_science_box/dataplot/venv/bin/python3.12
 # -*- coding: utf-8 -*-
 import re
 import sys
