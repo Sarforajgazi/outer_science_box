@@ -91,16 +91,33 @@ This will:
 
 ## Upload Commands
 
+### Find Your Port First
+
+> ⚠️ **Port names are device-specific!** The port (e.g., `/dev/cu.usbserial-1140`) depends on your USB adapter's serial number. Always detect your actual port before uploading.
+
+```bash
+# List available USB ports
+ls /dev/cu.usb*
+
+# Or use PlatformIO
+pio device list
+```
+
+Set your port:
+```bash
+PORT=/dev/cu.usbserial-XXXX   # Replace XXXX with your actual number
+```
+
 ### Full Mission (Motors + Sensors)
 ```bash
-pio run -e megaatmega2560 -t upload --upload-port /dev/cu.usbserial-1140
-pio device monitor -p /dev/cu.usbserial-1140 -b 9600
+pio run -e megaatmega2560 -t upload --upload-port $PORT
+pio device monitor -p $PORT -b 9600
 ```
 
 ### Motor Test Only (Manual Control)
 ```bash
-pio run -e relay_test -t upload --upload-port /dev/cu.usbserial-1140
-pio device monitor -p /dev/cu.usbserial-1140 -b 9600
+pio run -e relay_test -t upload --upload-port $PORT
+pio device monitor -p $PORT -b 9600
 ```
 
 **Relay Test Commands:**
