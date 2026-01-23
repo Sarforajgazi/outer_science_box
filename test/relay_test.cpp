@@ -3,7 +3,7 @@
  * RELAY TEST FILE
  * =============================================================================
  * 
- * Interactive test program for the 6-channel relay module.
+ * Interactive test program for the 8-channel relay module.
  * Use this to verify relay wiring and operation before integration.
  * 
  * How to Use:
@@ -15,7 +15,7 @@
  *   ┌─────────┬────────────────────────────────────────────────┐
  *   │ Command │ Action                                         │
  *   ├─────────┼────────────────────────────────────────────────┤
- *   │ 1-6     │ Toggle that specific relay                     │
+ *   │ 1-8     │ Toggle that specific relay                     │
  *   │ a       │ Turn ALL relays ON                             │
  *   │ o       │ Turn ALL relays OFF                            │
  *   │ s       │ Sequential test (each relay ON for 1 second)   │
@@ -23,12 +23,14 @@
  *   └─────────┴────────────────────────────────────────────────┘
  * 
  * Hardware:
- *   - Relay 1: Pin 35
- *   - Relay 2: Pin 37
- *   - Relay 3: Pin 39
- *   - Relay 4: Pin 41
- *   - Relay 5: Pin 43
- *   - Relay 6: Pin 45
+ *   - Relay 1 (IN1): Pin 46
+ *   - Relay 2 (IN2): Pin 44
+ *   - Relay 3 (IN3): Pin 45
+ *   - Relay 4 (IN4): Pin 43
+ *   - Relay 5 (IN5): Pin 41
+ *   - Relay 6 (IN6): Pin 39
+ *   - Relay 7 (IN7): Pin 37
+ *   - Relay 8 (IN8): Pin 35
  * 
  * Safety:
  *   - Relay loads should be disconnected during initial testing
@@ -58,10 +60,10 @@ void setup() {
 
     // Print welcome banner
     Serial.println(F("================================"));
-    Serial.println(F("   6-CHANNEL RELAY TEST"));
+    Serial.println(F("   8-CHANNEL RELAY TEST"));
     Serial.println(F("   Team Obseract Rover"));
     Serial.println(F("================================"));
-    Serial.println(F("Pins: 35, 37, 39, 41, 43, 45"));
+    Serial.println(F("Pins: 46,44,45,43,41,39,37,35"));
     Serial.println(F(""));
 
     // Initialize all relay pins (starts with all OFF)
@@ -70,7 +72,7 @@ void setup() {
     // Print command help
     Serial.println(F(""));
     Serial.println(F("Commands:"));
-    Serial.println(F("  1-6  -> Toggle relay 1-6"));
+    Serial.println(F("  1-8  -> Toggle relay 1-8"));
     Serial.println(F("  a    -> All ON"));
     Serial.println(F("  o    -> All OFF"));
     Serial.println(F("  s    -> Sequential test"));
@@ -106,6 +108,8 @@ void loop() {
             case '4':
             case '5':
             case '6':
+            case '7':
+            case '8':
                 // Convert character to number: '1' -> 1, '2' -> 2, etc.
                 relays.toggle(cmd - '0');
                 break;
@@ -139,8 +143,8 @@ void loop() {
                 Serial.println(F("\n>> SEQUENTIAL TEST"));
                 Serial.println(F("Each relay ON for 1 second..."));
                 
-                // Loop through relays 1-6
-                for (int i = 1; i <= 6; i++) {
+                // Loop through relays 1-8
+                for (int i = 1; i <= 8; i++) {
                     relays.pulseOn(i, 1000);  // ON for 1000ms (1 second)
                     delay(200);               // 200ms gap between relays
                 }
@@ -154,6 +158,14 @@ void loop() {
             case 't':
             case 'T':
                 relays.printStatus();
+                break;
+            
+            // =========================================================
+            // COMMAND 'c': Run soil collection sequence
+            // =========================================================
+            case 'c':
+            case 'C':
+                relays.soilCollectionSequence();
                 break;
             
             // =========================================================

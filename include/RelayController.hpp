@@ -1,9 +1,9 @@
 /**
  * =============================================================================
- * RELAY CONTROLLER - 6-Channel Relay Module
+ * RELAY CONTROLLER - 8-Channel Relay Module
  * =============================================================================
  * 
- * Controls a 6-channel relay module for the Outer Science Box.
+ * Controls an 8-channel relay module for the Outer Science Box.
  * Used for switching 12V devices like pumps, valves, motors, etc.
  * 
  * Hardware:
@@ -12,18 +12,18 @@
  *   - 12V power supply for relay loads
  * 
  * Wiring Diagram:
- *   ┌─────────────────────────────────────────────────────────────┐
- *   │  RELAY MODULE                                               │
- *   │  ┌─────┬─────┬─────┬─────┬─────┬─────┐                     │
- *   │  │ IN1 │ IN2 │ IN3 │ IN4 │ IN5 │ IN6 │                     │
- *   │  └──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┘                     │
- *   │     │     │     │     │     │     │                         │
- *   │     │ Arduino Digital Pins        │                         │
- *   │     │  35   37   39   41   43   45│                         │
- *   │                                                             │
- *   │  VCC ─────> Arduino 5V                                      │
- *   │  GND ─────> Arduino GND                                     │
- *   └─────────────────────────────────────────────────────────────┘
+ *   ┌─────────────────────────────────────────────────────────────────────┐
+ *   │  RELAY MODULE                                                       │
+ *   │  ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┬─────┐                 │
+ *   │  │ IN1 │ IN2 │ IN3 │ IN4 │ IN5 │ IN6 │ IN7 │ IN8 │                 │
+ *   │  └──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┴──┬──┘                 │
+ *   │     │     │     │     │     │     │     │     │                     │
+ *   │     │ Arduino Digital Pins              │     │                     │
+ *   │     │  46   44   45   43   41   39   37   35  │                     │
+ *   │                                                                     │
+ *   │  VCC ─────> Arduino 5V                                              │
+ *   │  GND ─────> Arduino GND                                             │
+ *   └─────────────────────────────────────────────────────────────────────┘
  * 
  *   Each relay has 3 terminals:
  *     COM (Common)  ───> 12V Power Supply (+)
@@ -48,17 +48,33 @@
 // =============================================================================
 // PIN DEFINITIONS
 // =============================================================================
-// Pins are on the odd-numbered digital pins (35, 37, 39, 41, 43, 45)
-// These are easy to remember and keep wiring organized
+// Pins: IN1=46, IN2=44, IN3=45, IN4=43, IN5=41, IN6=39, IN7=37, IN8=35
 
-#define RELAY_1_PIN  35   // Relay 1: Pin 35
-#define RELAY_2_PIN  37   // Relay 2: Pin 37
-#define RELAY_3_PIN  39   // Relay 3: Pin 39
-#define RELAY_4_PIN  41   // Relay 4: Pin 41
-#define RELAY_5_PIN  43   // Relay 5: Pin 43
-#define RELAY_6_PIN  45   // Relay 6: Pin 45
+#define RELAY_1_PIN  46   // Relay 1 (IN1): Pin 46
+#define RELAY_2_PIN  44   // Relay 2 (IN2): Pin 44
+#define RELAY_3_PIN  45   // Relay 3 (IN3): Pin 45
+#define RELAY_4_PIN  43   // Relay 4 (IN4): Pin 43
+#define RELAY_5_PIN  41   // Relay 5 (IN5): Pin 41
+#define RELAY_6_PIN  39   // Relay 6 (IN6): Pin 39
+#define RELAY_7_PIN  37   // Relay 7 (IN7): Pin 37
+#define RELAY_8_PIN  35   // Relay 8 (IN8): Pin 35
 
-#define NUM_RELAYS 6      // Total number of relays
+#define NUM_RELAYS 8      // Total number of relays
+
+// =============================================================================
+// MOTOR RELAY ASSIGNMENTS
+// =============================================================================
+// Platform 1 - Main arm (Motor 1)
+#define PLATFORM1_UP_RELAY    1   // Relay 1: Platform 1 moves UP
+#define PLATFORM1_DOWN_RELAY  2   // Relay 2: Platform 1 moves DOWN
+
+// Platform 2 - Drill platform (Motor 2)
+#define PLATFORM2_UP_RELAY    4   // Relay 4: Platform 2 moves UP
+#define PLATFORM2_DOWN_RELAY  3   // Relay 3: Platform 2 moves DOWN
+
+// Drill (Motor 3)
+#define DRILL_RELAY           5   // Relay 5: Drill ON/OFF
+#define LIFT_RELAY            6   // Relay 6: Lift mechanism
 
 // =============================================================================
 // RELAY LOGIC CONSTANTS
@@ -82,16 +98,18 @@ private:
     
     // Array of pin numbers for each relay (0-indexed)
     uint8_t relayPins[NUM_RELAYS] = {
-        RELAY_1_PIN,   // relayPins[0] = Pin 35
-        RELAY_2_PIN,   // relayPins[1] = Pin 37
-        RELAY_3_PIN,   // relayPins[2] = Pin 39
-        RELAY_4_PIN,   // relayPins[3] = Pin 41
-        RELAY_5_PIN,   // relayPins[4] = Pin 43
-        RELAY_6_PIN    // relayPins[5] = Pin 45
+        RELAY_1_PIN,   // relayPins[0] = Pin 46 (IN1)
+        RELAY_2_PIN,   // relayPins[1] = Pin 44 (IN2)
+        RELAY_3_PIN,   // relayPins[2] = Pin 45 (IN3)
+        RELAY_4_PIN,   // relayPins[3] = Pin 43 (IN4)
+        RELAY_5_PIN,   // relayPins[4] = Pin 41 (IN5)
+        RELAY_6_PIN,   // relayPins[5] = Pin 39 (IN6)
+        RELAY_7_PIN,   // relayPins[6] = Pin 37 (IN7)
+        RELAY_8_PIN    // relayPins[7] = Pin 35 (IN8)
     };
     
     // Track current state of each relay (true = ON, false = OFF)
-    bool relayStates[NUM_RELAYS] = {false, false, false, false, false, false};
+    bool relayStates[NUM_RELAYS] = {false, false, false, false, false, false, false, false};
 
 public:
     // =========================================================================
@@ -110,7 +128,7 @@ public:
             digitalWrite(relayPins[i], RELAY_OFF);  // Start with all relays OFF
             relayStates[i] = false;
         }
-        Serial.println(F("RelayController: All 6 relays initialized (OFF)"));
+        Serial.println(F("RelayController: All 8 relays initialized (OFF)"));
     }
 
     // =========================================================================
@@ -288,6 +306,137 @@ public:
         
         Serial.println(F("Sequential activation complete."));
     }
+
+    // =========================================================================
+    // PLATFORM & DRILL MOTOR CONTROL
+    // =========================================================================
+
+    /**
+     * Move Platform 1 (main arm) UP for specified duration.
+     * @param durationMs How long to move (milliseconds)
+     */
+    void platform1Up(unsigned long durationMs) {
+        Serial.println(F("Platform 1: Moving UP..."));
+        pulseOn(PLATFORM1_UP_RELAY, durationMs);
+    }
+
+    /**
+     * Move Platform 1 (main arm) DOWN for specified duration.
+     * @param durationMs How long to move (milliseconds)
+     */
+    void platform1Down(unsigned long durationMs) {
+        Serial.println(F("Platform 1: Moving DOWN..."));
+        pulseOn(PLATFORM1_DOWN_RELAY, durationMs);
+    }
+
+    /**
+     * Move Platform 2 (drill platform) UP for specified duration.
+     * @param durationMs How long to move (milliseconds)
+     */
+    void platform2Up(unsigned long durationMs) {
+        Serial.println(F("Platform 2: Moving UP..."));
+        pulseOn(PLATFORM2_UP_RELAY, durationMs);
+    }
+
+    /**
+     * Move Platform 2 (drill platform) DOWN for specified duration.
+     * @param durationMs How long to move (milliseconds)
+     */
+    void platform2Down(unsigned long durationMs) {
+        Serial.println(F("Platform 2: Moving DOWN..."));
+        pulseOn(PLATFORM2_DOWN_RELAY, durationMs);
+    }
+
+    /**
+     * Turn the drill ON.
+     */
+    void drillOn() {
+        Serial.println(F("Drill: ON"));
+        turnOn(DRILL_RELAY);
+    }
+
+    /**
+     * Turn the drill OFF.
+     */
+    void drillOff() {
+        Serial.println(F("Drill: OFF"));
+        turnOff(DRILL_RELAY);
+    }
+
+    /**
+     * Activate lift mechanism.
+     * @param durationMs How long to activate (milliseconds)
+     */
+    void liftActivate(unsigned long durationMs) {
+        Serial.println(F("Lift mechanism: Activating..."));
+        pulseOn(LIFT_RELAY, durationMs);
+    }
+
+    // =========================================================================
+    // SOIL COLLECTION SEQUENCE
+    // =========================================================================
+
+    /**
+     * Execute the complete soil collection sequence.
+     * 
+     * Sequence:
+     *   1. Platform 1 DOWN  → Lower main arm
+     *   2. Drill ON         → Start drill motor
+     *   3. Platform 2 DOWN  → Push drill into soil
+     *   4. Wait             → Allow drilling
+     *   5. Platform 2 UP    → Retract with soil sample
+     *   6. Drill OFF        → Stop drill
+     *   7. Platform 1 UP    → Raise main arm
+     * 
+     * @param platformMoveTime  Time for platform movements (ms), default 3000
+     * @param drillTime         Time to drill in soil (ms), default 2000
+     */
+    void soilCollectionSequence(
+        unsigned long platformMoveTime = 3000,
+        unsigned long drillTime = 2000
+    ) {
+        Serial.println(F(""));
+        Serial.println(F("==========================================="));
+        Serial.println(F("  SOIL COLLECTION SEQUENCE - STARTING"));
+        Serial.println(F("==========================================="));
+        
+        // Step 1: Lower Platform 1 (main arm)
+        Serial.println(F("[Step 1/7] Lowering Platform 1..."));
+        platform1Down(platformMoveTime);
+        delay(500);  // Brief pause
+        
+        // Step 2: Start the drill
+        Serial.println(F("[Step 2/7] Starting drill..."));
+        drillOn();
+        delay(500);  // Let drill spin up
+        
+        // Step 3: Lower Platform 2 (push drill into soil)
+        Serial.println(F("[Step 3/7] Lowering Platform 2 into soil..."));
+        platform2Down(platformMoveTime);
+        
+        // Step 4: Wait for drilling
+        Serial.println(F("[Step 4/7] Drilling..."));
+        delay(drillTime);
+        
+        // Step 5: Raise Platform 2 (retract with soil)
+        Serial.println(F("[Step 5/7] Retracting Platform 2 with soil..."));
+        platform2Up(platformMoveTime);
+        
+        // Step 6: Stop drill
+        Serial.println(F("[Step 6/7] Stopping drill..."));
+        drillOff();
+        delay(500);  // Brief pause
+        
+        // Step 7: Raise Platform 1 (bring sample up)
+        Serial.println(F("[Step 7/7] Raising Platform 1..."));
+        platform1Up(platformMoveTime);
+        
+        Serial.println(F("==========================================="));
+        Serial.println(F("  SOIL COLLECTION COMPLETE!"));
+        Serial.println(F("==========================================="));
+        Serial.println(F(""));
+    }
 };
 
 #endif // RELAY_CONTROLLER_HPP
+
