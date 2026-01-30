@@ -388,12 +388,18 @@ public:
      *   6. Drill OFF        → Stop drill
      *   7. Platform 1 UP    → Raise main arm
      * 
-     * @param platformMoveTime  Time for platform movements (ms), default 3000
-     * @param drillTime         Time to drill in soil (ms), default 2000
+     * @param p1DownTime   Time for Platform 1 to lower (ms), default 3000
+     * @param p1UpTime     Time for Platform 1 to raise (ms), default 3000
+     * @param p2DownTime   Time for Platform 2 to lower (ms), default 3000
+     * @param p2UpTime     Time for Platform 2 to raise (ms), default 3000
+     * @param drillTime    Time to drill in soil (ms), default 2000
      */
     void soilCollectionSequence(
-        unsigned long platformMoveTime = 3000,
-        unsigned long drillTime = 2000
+        unsigned long p1DownTime = 3000,
+        unsigned long p1UpTime   = 3000,
+        unsigned long p2DownTime = 3000,
+        unsigned long p2UpTime   = 3000,
+        unsigned long drillTime  = 2000
     ) {
         Serial.println(F(""));
         Serial.println(F("==========================================="));
@@ -402,7 +408,7 @@ public:
         
         // Step 1: Lower Platform 1 (main arm)
         Serial.println(F("[Step 1/7] Lowering Platform 1..."));
-        platform1Down(platformMoveTime);
+        platform1Down(p1DownTime);
         delay(500);  // Brief pause
         
         // Step 2: Start the drill
@@ -412,7 +418,7 @@ public:
         
         // Step 3: Lower Platform 2 (push drill into soil)
         Serial.println(F("[Step 3/7] Lowering Platform 2 into soil..."));
-        platform2Down(platformMoveTime);
+        platform2Down(p2DownTime);
         
         // Step 4: Wait for drilling
         Serial.println(F("[Step 4/7] Drilling..."));
@@ -420,7 +426,7 @@ public:
         
         // Step 5: Raise Platform 2 (retract with soil)
         Serial.println(F("[Step 5/7] Retracting Platform 2 with soil..."));
-        platform2Up(platformMoveTime);
+        platform2Up(p2UpTime);
         
         // Step 6: Stop drill
         Serial.println(F("[Step 6/7] Stopping drill..."));
@@ -429,7 +435,7 @@ public:
         
         // Step 7: Raise Platform 1 (bring sample up)
         Serial.println(F("[Step 7/7] Raising Platform 1..."));
-        platform1Up(platformMoveTime);
+        platform1Up(p1UpTime);
         
         Serial.println(F("==========================================="));
         Serial.println(F("  SOIL COLLECTION COMPLETE!"));

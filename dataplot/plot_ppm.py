@@ -243,9 +243,65 @@ def plot_all_env_combined(site_id=1):
 
 
 # ==============================================================================
+# COMBINED SOIL SENSOR PLOT (1x3 Grid) - DHT22 + HW-103
+# ==============================================================================
+
+def plot_soil_sensors_combined(site_id=1):
+    """
+    Plot all soil sensor data in a 1x3 grid layout.
+    
+    Shows DHT22 temperature, DHT22 humidity, and HW-103 moisture.
+    
+    Layout:
+        ┌─────────────┬─────────────┬─────────────┐
+        │ Soil Temp   │  Soil RH    │ Soil Moisture │
+        │  (DHT22)    │  (DHT22)    │   (HW-103)    │
+        └─────────────┴─────────────┴─────────────┘
+    
+    Args:
+        site_id: Sample site identifier (default: 1)
+    """
+    # Soil sensor configuration: (csv_name, display_title, unit, color)
+    soil_params = [
+        ("SOIL_TEMP",      "Soil Temperature", "°C", "tab:orange"),
+        ("SOIL_HUM",       "Soil Humidity",    "%",  "tab:cyan"),
+        ("SOIL_MOISTURE",  "Soil Moisture",    "%",  "tab:brown")
+    ]
+    
+    # Create 1x3 subplot grid (wide format)
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+    
+    # Plot each soil parameter
+    for ax, (sensor_name, title, unit, color) in zip(axes, soil_params):
+        # Filter data for this parameter and site
+        data = df[(df["sensor"] == sensor_name) & (df["site"] == site_id)]
+        
+        # Handle case where no data exists
+        if data.empty:
+            ax.set_title(f"{title}\n(No Data)")
+            continue
+        
+        # Plot the data
+        ax.plot(data["time_s"], data["value"], color=color, linewidth=1.5)
+        ax.set_title(title, fontsize=12)
+        ax.set_xlabel("Time (s)")
+        ax.set_ylabel(unit)
+        ax.grid(True, alpha=0.3)  # Light grid lines
+    
+    # Add main title
+    plt.suptitle("Soil Sensors (DHT22 + HW-103) — Team Obseract Rover", fontsize=14)
+    
+    # Adjust layout
+    plt.tight_layout(rect=[0, 0, 1, 0.92])
+    
+    # Display the plot
+    plt.show()
+
+
+# ==============================================================================
 # MAIN EXECUTION
 # ==============================================================================
-# When this script is run directly, generate both combined plots
+# When this script is run directly, generate all plots
 
 if __name__ == "__main__":
     print("Generating MQ sensor plot (2x2 grid)...")
@@ -253,5 +309,8 @@ if __name__ == "__main__":
     
     print("Generating BME280 environmental plot (1x3 grid)...")
     plot_all_env_combined(site_id=1)
+    
+    print("Generating Soil sensor plot (1x3 grid)...")
+    plot_soil_sensors_combined(site_id=1)
     
     print("Done!")

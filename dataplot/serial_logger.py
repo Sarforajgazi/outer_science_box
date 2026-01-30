@@ -212,9 +212,11 @@ def generate_plots(csv_file, output_dir):
     """
     Generate and save PNG plots from collected CSV data.
     
-    Creates two plot files:
+    Creates plot files for ALL sensors:
     1. MQ gas sensors (2x2 grid): CH4, H2S, H2, CO2
     2. BME280 environment (1x3 grid): Temperature, Humidity, Pressure
+    3. Soil sensors (1x3 grid): DHT22 Temp, DHT22 Humidity, HW-103 Moisture
+    4. NPK data (2x3 grid): EC, pH, N, P, K, Soil Moisture
     
     Args:
         csv_file: Path to CSV data file
@@ -228,7 +230,7 @@ def generate_plots(csv_file, output_dir):
         import pandas as pd
         import matplotlib.pyplot as plt
         
-        print("Generating plots...")
+        print("Generating plots for ALL sensors...")
         
         # Load CSV data
         df = pd.read_csv(csv_file)
@@ -240,6 +242,7 @@ def generate_plots(csv_file, output_dir):
         # ==================================================================
         # PLOT 1: MQ Gas Sensors (2x2 grid)
         # ==================================================================
+        print("  [1/4] MQ Gas Sensors...")
         sensors = [
             ("MQ4_CH4",   "MQ-4 Methane (CH₄)",   "tab:blue"),
             ("MQ136_H2S", "MQ-136 H₂S",           "tab:orange"),
@@ -264,15 +267,15 @@ def generate_plots(csv_file, output_dir):
         plt.suptitle("MQ Gas Sensors — Team Obseract Rover", fontsize=16)
         plt.tight_layout(rect=[0, 0, 1, 0.96])
         
-        # Save MQ sensors plot
         mq_plot_file = os.path.join(output_dir, f"mq_sensors_{timestamp}.png")
-        plt.savefig(mq_plot_file, dpi=150)  # 150 DPI for good quality
-        print(f"Saved: {mq_plot_file}")
+        plt.savefig(mq_plot_file, dpi=150)
+        print(f"       Saved: {mq_plot_file}")
         plt.close()
         
         # ==================================================================
         # PLOT 2: BME280 Environment (1x3 grid)
         # ==================================================================
+        print("  [2/4] BME280 Environment...")
         env_params = [
             ("BME_TEMP",  "Temperature", "°C",  "tab:red"),
             ("BME_HUM",   "Humidity",    "%",   "tab:blue"),
@@ -289,20 +292,93 @@ def generate_plots(csv_file, output_dir):
                 ax.set_xlabel("Time (s)")
                 ax.set_ylabel(unit)
                 ax.grid(True, alpha=0.3)
+            else:
+                ax.set_title(f"{title}\n(No Data)")
         
         plt.suptitle("BME280 Environmental Data — Team Obseract Rover", fontsize=14)
         plt.tight_layout(rect=[0, 0, 1, 0.92])
         
-        # Save environment plot
         env_plot_file = os.path.join(output_dir, f"environment_{timestamp}.png")
         plt.savefig(env_plot_file, dpi=150)
-        print(f"Saved: {env_plot_file}")
+        print(f"       Saved: {env_plot_file}")
         plt.close()
         
+        # ==================================================================
+        # PLOT 3: Soil Sensors - DHT22 + HW-103 (1x3 grid)
+        # ==================================================================
+        print("  [3/4] Soil Sensors (DHT22 + HW-103)...")
+        soil_params = [
+            ("SOIL_TEMP",     "Soil Temperature (DHT22)", "°C", "tab:orange"),
+            ("SOIL_HUM",      "Soil Humidity (DHT22)",    "%",  "tab:cyan"),
+            ("SOIL_MOISTURE", "Soil Moisture (HW-103)",   "%",  "tab:brown")
+        ]
+        
+        fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+        
+        for ax, (sensor_name, title, unit, color) in zip(axes, soil_params):
+            data = df[df["sensor"] == sensor_name]
+            if not data.empty:
+                ax.plot(data["time_s"], data["value"], color=color, linewidth=1.5)
+                ax.set_title(title, fontsize=12)
+                ax.set_xlabel("Time (s)")
+                ax.set_ylabel(unit)
+                ax.grid(True, alpha=0.3)
+            else:
+                ax.set_title(f"{title}\n(No Data)")
+        
+        plt.suptitle("Soil Sensors (DHT22 + HW-103) — Team Obseract Rover", fontsize=14)
+        plt.tight_layout(rect=[0, 0, 1, 0.92])
+        
+        soil_plot_file = os.path.join(output_dir, f"soil_sensors_{timestamp}.png")
+        plt.savefig(soil_plot_file, dpi=150)
+        print(f"       Saved: {soil_plot_file}")
+        plt.close()
+        
+        # ==================================================================
+        # PLOT 4: NPK Sensor Data (2x3 grid)
+        # ==================================================================
+        print("  [4/4] NPK Sensor Data...")
+        npk_params = [
+            ("EC",         "Electrical Conductivity", "µS/cm", "tab:purple"),
+            ("PH",         "pH Value",                "",      "tab:pink"),
+            ("NITROGEN",   "Nitrogen (N)",            "mg/kg", "tab:green"),
+            ("PHOSPHORUS", "Phosphorus (P)",          "mg/kg", "tab:orange"),
+            ("POTASSIUM",  "Potassium (K)",           "mg/kg", "tab:red"),
+        ]
+        
+        fig, axes = plt.subplots(2, 3, figsize=(15, 8))
+        axes = axes.flatten()
+        
+        for i, (sensor_name, title, unit, color) in enumerate(npk_params):
+            ax = axes[i]
+            data = df[df["sensor"] == sensor_name]
+            if not data.empty:
+                ax.plot(data["time_s"], data["value"], color=color, linewidth=1.5)
+                ax.set_title(title, fontsize=12)
+                ax.set_xlabel("Time (s)")
+                ax.set_ylabel(unit if unit else "Value")
+                ax.grid(True, alpha=0.3)
+            else:
+                ax.set_title(f"{title}\n(No Data)")
+        
+        # Hide the 6th subplot (we only have 5 NPK params)
+        axes[5].axis('off')
+        
+        plt.suptitle("NPK Soil Analysis — Team Obseract Rover", fontsize=16)
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
+        
+        npk_plot_file = os.path.join(output_dir, f"npk_data_{timestamp}.png")
+        plt.savefig(npk_plot_file, dpi=150)
+        print(f"       Saved: {npk_plot_file}")
+        plt.close()
+        
+        print("\n  ✓ All plots generated successfully!")
         return True
         
     except Exception as e:
         print(f"Error generating plots: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 

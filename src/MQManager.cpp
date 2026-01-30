@@ -74,15 +74,15 @@
 // Set these values based on your testing location.
 //
 
-// ----- KOLKATA (January testing) -----
-// Average conditions during January
-#define MQ135_TEMP_REF  20.0   // Reference temperature in °C
-#define MQ135_HUM_REF   60.0   // Reference humidity in %
+// ----- UDUPI, Karnataka (coastal climate) -----
+// Average conditions for late January
+#define MQ135_TEMP_REF  26.0   // Warmer coastal climate
+#define MQ135_HUM_REF   70.0   // Higher humidity
 
-// ----- UDUPI, Karnataka (late January) -----
-// Uncomment these and comment above for Udupi testing:
-// #define MQ135_TEMP_REF  26.0   // Warmer coastal climate
-// #define MQ135_HUM_REF   70.0   // Higher humidity
+// ----- KOLKATA (January testing) -----
+// Uncomment these and comment above for Kolkata testing:
+// #define MQ135_TEMP_REF  20.0   // Reference temperature in °C
+// #define MQ135_HUM_REF   60.0   // Reference humidity in %
 
 // =============================================================================
 // CONSTRUCTOR
