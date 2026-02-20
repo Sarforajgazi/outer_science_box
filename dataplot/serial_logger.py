@@ -55,6 +55,7 @@ from datetime import datetime
 BAUD_RATE = 9600              # Must match Arduino Serial.begin() rate
 DURATION_SECONDS = 420        # Default logging duration (7 minutes)
                               # Can be overridden via command line argument
+PLOT_TIME_LIMIT = 10          # Time limit for plots (show only first N seconds)
 
 OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))  # Save files next to script
 SKIP_WARMUP_LINES = True      # Skip warmup messages (Warming, Calibrating, etc.)
@@ -235,6 +236,7 @@ def generate_plots(csv_file, output_dir):
         # Load CSV data
         df = pd.read_csv(csv_file)
         df["time_s"] = df["time_ms"] / 1000.0  # Convert ms to seconds
+        df["time_s"] = df["time_s"] - df["time_s"].min()  # Normalize to start from 0
         
         # Generate timestamp for filenames
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -260,6 +262,7 @@ def generate_plots(csv_file, output_dir):
                 ax.set_title(title, fontsize=12)
                 ax.set_xlabel("Time (s)")
                 ax.set_ylabel(f"{data['unit'].iloc[0]}")
+                ax.set_xlim(0, PLOT_TIME_LIMIT)  # Limit to first 10 seconds
                 ax.grid(True, alpha=0.3)
             else:
                 ax.set_title(f"{title}\n(No Data)")
@@ -291,6 +294,7 @@ def generate_plots(csv_file, output_dir):
                 ax.set_title(title, fontsize=12)
                 ax.set_xlabel("Time (s)")
                 ax.set_ylabel(unit)
+                ax.set_xlim(0, PLOT_TIME_LIMIT)  # Limit to first 10 seconds
                 ax.grid(True, alpha=0.3)
             else:
                 ax.set_title(f"{title}\n(No Data)")
@@ -322,6 +326,7 @@ def generate_plots(csv_file, output_dir):
                 ax.set_title(title, fontsize=12)
                 ax.set_xlabel("Time (s)")
                 ax.set_ylabel(unit)
+                ax.set_xlim(0, PLOT_TIME_LIMIT)  # Limit to first 10 seconds
                 ax.grid(True, alpha=0.3)
             else:
                 ax.set_title(f"{title}\n(No Data)")
@@ -357,6 +362,7 @@ def generate_plots(csv_file, output_dir):
                 ax.set_title(title, fontsize=12)
                 ax.set_xlabel("Time (s)")
                 ax.set_ylabel(unit if unit else "Value")
+                ax.set_xlim(0, PLOT_TIME_LIMIT)  # Limit to first 10 seconds
                 ax.grid(True, alpha=0.3)
             else:
                 ax.set_title(f"{title}\n(No Data)")

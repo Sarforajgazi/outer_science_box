@@ -53,6 +53,12 @@ df = pd.read_csv(csv_file)
 # Convert time from milliseconds to seconds for easier reading on plots
 df["time_s"] = df["time_ms"] / 1000.0
 
+# Normalize time to start from 0
+df["time_s"] = df["time_s"] - df["time_s"].min()
+
+# Time limit in seconds (only show first N seconds of data)
+TIME_LIMIT = 10
+
 # ==============================================================================
 # INDIVIDUAL SENSOR PLOTTING FUNCTIONS
 # ==============================================================================
@@ -174,6 +180,7 @@ def plot_all_sensors_combined(site_id=1):
         ax.set_title(title, fontsize=12)
         ax.set_xlabel("Time (s)")
         ax.set_ylabel(f"{data['unit'].iloc[0]}")  # Get unit from first row
+        ax.set_xlim(0, TIME_LIMIT)  # Limit to first 10 seconds
         ax.grid(True, alpha=0.3)  # Light grid lines
     
     # Add main title
@@ -230,6 +237,7 @@ def plot_all_env_combined(site_id=1):
         ax.set_title(title, fontsize=12)
         ax.set_xlabel("Time (s)")
         ax.set_ylabel(unit)
+        ax.set_xlim(0, TIME_LIMIT)  # Limit to first 10 seconds
         ax.grid(True, alpha=0.3)  # Light grid lines
     
     # Add main title
@@ -286,6 +294,7 @@ def plot_soil_sensors_combined(site_id=1):
         ax.set_title(title, fontsize=12)
         ax.set_xlabel("Time (s)")
         ax.set_ylabel(unit)
+        ax.set_xlim(0, TIME_LIMIT)  # Limit to first 10 seconds
         ax.grid(True, alpha=0.3)  # Light grid lines
     
     # Add main title
